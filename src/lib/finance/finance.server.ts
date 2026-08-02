@@ -18,7 +18,9 @@ async function writeAudit(entry: {
     entity_ref: entry.entity_ref,
     severity: entry.severity ?? "info",
     details: (entry.details ?? {}) as never,
-  });
+    ip_address: "internal",
+    user_agent: "software-vala-finance-console",
+  } as never);
 }
 
 function ok<T>(data: T) {
@@ -35,9 +37,8 @@ export async function updatePayoutStatus(input: {
   actor: string;
   note?: string;
 }) {
-  const patch: Json = { status: input.status, note: input.note ?? null };
-  if (input.status === "approved") patch['approved_at'] = new Date().toISOString();
-  if (input.status === "paid") patch['paid_at'] = new Date().toISOString();
+  const patch: Json = { status: input.status, reviewer_note: input.note ?? null };
+  if (input.status === "paid") patch['processed_at'] = new Date().toISOString();
 
   const { data, error } = await supabaseAdmin
     .from("finance_payouts")
@@ -53,7 +54,7 @@ export async function updatePayoutStatus(input: {
     entity: "finance_payouts",
     entity_ref: data.payout_code,
     severity: input.status === "rejected" ? "warning" : "info",
-    details: { amount: data.net_amount, recipient: data.recipient_name },
+    details: { amount: data.amount, recipient: data.recipient_name },
   });
   return ok(data);
 }
@@ -64,7 +65,7 @@ export async function updateRefundStatus(input: {
   actor: string;
   note?: string;
 }) {
-  const patch: Json = { status: input.status, resolution_note: input.note ?? null };
+  const patch: Json = { status: input.status, reviewer_note: input.note ?? null };
   if (input.status === "processed") patch['processed_at'] = new Date().toISOString();
 
   const { data, error } = await supabaseAdmin
@@ -97,8 +98,7 @@ export async function decideApproval(input: {
     .update({
       status: input.decision,
       decided_at: new Date().toISOString(),
-      decided_by: input.actor,
-      decision_note: input.note ?? null,
+      notes: input.note ?? null,
     } as never)
     .eq("id", input.id)
     .select("*")
@@ -109,7 +109,7 @@ export async function decideApproval(input: {
     actor: input.actor,
     action: `approval.${input.decision}`,
     entity: "finance_approvals",
-    entity_ref: data.request_code,
+    entity_ref: data.reference,
     severity: input.decision === "rejected" ? "warning" : "info",
     details: { amount: data.amount, request_type: data.request_type },
   });
@@ -136,7 +136,7 @@ export async function updateInvoiceStatus(input: {
     actor: input.actor,
     action: `invoice.${input.status}`,
     entity: "finance_invoices",
-    entity_ref: data.invoice_number,
+    entity_ref: data.invoice_no,
     details: { total: data.total },
   });
   return ok(data);
@@ -166,14 +166,15 @@ export async function adjustWallet(input: {
     amount: input.amount,
     balance_after: nextBalance,
     reference: `ADJ-${Date.now().toString(36).toUpperCase()}`,
-    description: input.reason,
+    note: input.reason,
+    performed_by: input.actor,
     status: "completed",
   } as never);
   if (txError) fail(txError.message);
 
   const { data, error } = await supabaseAdmin
     .from("finance_wallets")
-    .update({ balance: nextBalance, updated_at: new Date().toISOString() } as never)
+    .update({ balance: nextBalance, last_activity_at: new Date().toISOString() } as never)
     .eq("id", wallet.id)
     .select("*")
     .single();
@@ -193,7 +194,7 @@ export async function adjustWallet(input: {
 export async function toggleWalletFreeze(input: { walletId: string; frozen: boolean; actor: string }) {
   const { data, error } = await supabaseAdmin
     .from("finance_wallets")
-    .update({ status: input.frozen ? "frozen" : "active", updated_at: new Date().toISOString() } as never)
+    .update({ status: input.frozen ? "frozen" : "active" } as never)
     .eq("id", input.walletId)
     .select("*")
     .single();
@@ -234,19 +235,19 @@ export async function createExpense(input: {
   description: string;
   amount: number;
   expenseDate: string;
+  recurring: boolean;
   actor: string;
 }) {
   const { data, error } = await supabaseAdmin
     .from("finance_expenses")
     .insert({
-      expense_code: `EXP-${Date.now().toString(36).toUpperCase()}`,
       category: input.category,
       vendor: input.vendor,
       description: input.description,
       amount: input.amount,
       expense_date: input.expenseDate,
+      recurring: input.recurring,
       status: "pending",
-      recorded_by: input.actor,
     } as never)
     .select("*")
     .single();
@@ -256,7 +257,7 @@ export async function createExpense(input: {
     actor: input.actor,
     action: "expense.create",
     entity: "finance_expenses",
-    entity_ref: data.expense_code,
+    entity_ref: data.id,
     details: { amount: data.amount, vendor: data.vendor },
   });
   return ok(data);
@@ -279,7 +280,8 @@ export async function updateExpenseStatus(input: {
     actor: input.actor,
     action: `expense.${input.status}`,
     entity: "finance_expenses",
-    entity_ref: data.expense_code,
+    entity_ref: data.id,
+    details: { vendor: data.vendor, amount: data.amount },
   });
   return ok(data);
 }
@@ -301,7 +303,8 @@ export async function updateSubscriptionStatus(input: {
     actor: input.actor,
     action: `subscription.${input.status}`,
     entity: "finance_subscriptions",
-    entity_ref: data.subscription_code,
+    entity_ref: data.customer_name,
+    details: { amount: data.amount },
   });
   return ok(data);
 }
@@ -311,7 +314,7 @@ export async function updateTaxRecordStatus(input: {
   status: "pending" | "filed" | "paid" | "overdue";
   actor: string;
 }) {
-  const patch: Json = { status: input.status };
+  const patch: Json = { filing_status: input.status };
   if (input.status === "filed" || input.status === "paid") patch['filed_at'] = new Date().toISOString();
 
   const { data, error } = await supabaseAdmin
@@ -326,8 +329,8 @@ export async function updateTaxRecordStatus(input: {
     actor: input.actor,
     action: `tax.${input.status}`,
     entity: "finance_tax_records",
-    entity_ref: data.record_code,
-    details: { period: data.period, amount: data.amount },
+    entity_ref: data.reference_no ?? data.period,
+    details: { period: data.period, amount: data.tax_amount },
   });
   return ok(data);
 }
@@ -336,9 +339,8 @@ export async function updateFraudAlertStatus(input: {
   id: string;
   status: "open" | "investigating" | "resolved" | "false_positive";
   actor: string;
-  note?: string;
 }) {
-  const patch: Json = { status: input.status, resolution_note: input.note ?? null };
+  const patch: Json = { status: input.status };
   if (input.status === "resolved" || input.status === "false_positive") {
     patch['resolved_at'] = new Date().toISOString();
   }
@@ -357,14 +359,15 @@ export async function updateFraudAlertStatus(input: {
     entity: "finance_fraud_alerts",
     entity_ref: data.alert_code,
     severity: "critical",
+    details: { risk_score: data.risk_score, amount: data.amount },
   });
   return ok(data);
 }
 
-export async function markAlertRead(input: { id: string; read: boolean }) {
+export async function updateAlertStatus(input: { id: string; status: "open" | "acknowledged" | "resolved" }) {
   const { data, error } = await supabaseAdmin
     .from("finance_alerts")
-    .update({ is_read: input.read } as never)
+    .update({ status: input.status } as never)
     .eq("id", input.id)
     .select("*")
     .single();
@@ -377,12 +380,9 @@ export async function updateCommissionStatus(input: {
   status: "pending" | "approved" | "paid" | "reversed";
   actor: string;
 }) {
-  const patch: Json = { status: input.status };
-  if (input.status === "paid") patch['paid_at'] = new Date().toISOString();
-
   const { data, error } = await supabaseAdmin
     .from("finance_commissions")
-    .update(patch as never)
+    .update({ status: input.status } as never)
     .eq("id", input.id)
     .select("*")
     .single();
@@ -392,8 +392,8 @@ export async function updateCommissionStatus(input: {
     actor: input.actor,
     action: `commission.${input.status}`,
     entity: "finance_commissions",
-    entity_ref: data.commission_code,
-    details: { amount: data.commission_amount },
+    entity_ref: data.partner_name,
+    details: { amount: data.commission_amount, period: data.period },
   });
   return ok(data);
 }
