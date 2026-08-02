@@ -84,9 +84,10 @@ export function percentChange(current: number, previous: number) {
 }
 
 export function downloadCsv(filename: string, rows: Record<string, unknown>[]) {
-  if (!rows.length) return;
-  const headers = Object.keys(rows[0]);
-  const escape = (v: unknown) => `"${String(v ?? "").replace(/"/g, '""')}"`;
+  const first = rows[0];
+  if (!first) return;
+  const headers = Object.keys(first);
+
   const csv = [
     headers.join(","),
     ...rows.map((row) => headers.map((h) => escape(row[h])).join(",")),
