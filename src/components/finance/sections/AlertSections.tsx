@@ -184,7 +184,7 @@ export default function AlertSections({ view }: Props) {
       icon: AlertTriangle,
     },
   };
-  const meta = titleMap[view] ?? titleMap.alert_high_amount;
+  const meta = titleMap[view] ?? titleMap["alert_high_amount"]!;
 
   return (
     <SectionShell
