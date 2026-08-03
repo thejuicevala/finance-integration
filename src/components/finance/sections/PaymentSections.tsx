@@ -45,7 +45,13 @@ export default function PaymentSections({ view }: { view: FinanceView }) {
   const [search, setSearch] = useState("");
   const [gatewayFilter, setGatewayFilter] = useState<string>("all");
 
-  const txnQ = useQuery(transactionsQuery({ direction: meta.direction, status: meta.status, limit: 300 }));
+  const txnFilters = useMemo(() => {
+    const f: { direction?: FinanceTransaction["direction"]; status?: FinanceTransaction["status"]; limit: number } = { limit: 300 };
+    if (meta.direction) f.direction = meta.direction;
+    if (meta.status) f.status = meta.status;
+    return f;
+  }, [meta.direction, meta.status]);
+  const txnQ = useQuery(transactionsQuery(txnFilters));
   const allTxnQ = useQuery(transactionsQuery({ limit: 500 }));
   const gatewaysQ = useQuery(gatewaysQuery());
 
