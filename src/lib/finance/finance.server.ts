@@ -35,7 +35,7 @@ export async function updatePayoutStatus(input: {
   id: string;
   status: "approved" | "rejected" | "processing" | "paid" | "on_hold";
   actor: string;
-  note?: string;
+  note?: string | undefined;
 }) {
   const patch: Json = { status: input.status, reviewer_note: input.note ?? null };
   if (input.status === "paid") patch['processed_at'] = new Date().toISOString();
@@ -63,7 +63,7 @@ export async function updateRefundStatus(input: {
   id: string;
   status: "approved" | "rejected" | "processed";
   actor: string;
-  note?: string;
+  note?: string | undefined;
 }) {
   const patch: Json = { status: input.status, reviewer_note: input.note ?? null };
   if (input.status === "processed") patch['processed_at'] = new Date().toISOString();
@@ -91,7 +91,7 @@ export async function decideApproval(input: {
   id: string;
   decision: "approved" | "rejected";
   actor: string;
-  note?: string;
+  note?: string | undefined;
 }) {
   const { data, error } = await supabaseAdmin
     .from("finance_approvals")
@@ -394,6 +394,54 @@ export async function updateCommissionStatus(input: {
     entity: "finance_commissions",
     entity_ref: data.partner_name,
     details: { amount: data.commission_amount, period: data.period },
+  });
+  return ok(data);
+}
+
+export async function createInvoice(input: {
+  clientName: string;
+  clientType: string;
+  docType: "invoice" | "credit_note" | "debit_note" | "tax_invoice";
+  gstNumber?: string | undefined;
+  dueDate: string;
+  taxPercent: number;
+  lineItems: { description: string; qty: number; rate: number }[];
+  actor: string;
+}) {
+  if (!input.lineItems.length) fail("Add at least one line item.");
+  const subtotal = input.lineItems.reduce((sum, li) => sum + li.qty * li.rate, 0);
+  const taxAmount = (subtotal * input.taxPercent) / 100;
+  const prefix =
+    input.docType === "credit_note" ? "CN" : input.docType === "debit_note" ? "DN" : "INV";
+  const invoiceNo = `${prefix}-${new Date().getFullYear()}-${Date.now().toString(36).toUpperCase().slice(-6)}`;
+
+  const { data, error } = await supabaseAdmin
+    .from("finance_invoices")
+    .insert({
+      invoice_no: invoiceNo,
+      doc_type: input.docType,
+      client_name: input.clientName,
+      client_type: input.clientType,
+      gst_number: input.gstNumber ?? null,
+      issue_date: new Date().toISOString().slice(0, 10),
+      due_date: input.dueDate,
+      subtotal,
+      tax_amount: taxAmount,
+      total: subtotal + taxAmount,
+      status: "draft",
+      auto_generated: false,
+      line_items: input.lineItems as never,
+    } as never)
+    .select("*")
+    .single();
+  if (error) fail(error.message);
+
+  await writeAudit({
+    actor: input.actor,
+    action: "invoice.create",
+    entity: "finance_invoices",
+    entity_ref: data.invoice_no,
+    details: { total: data.total, client: data.client_name },
   });
   return ok(data);
 }
