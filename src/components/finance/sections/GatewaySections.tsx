@@ -28,7 +28,7 @@ const GATEWAY_META: Record<string, { code: string; label: string; icon: LucideIc
 };
 
 export default function GatewaySections({ view }: { view: FinanceView }) {
-  const meta = GATEWAY_META[view] ?? GATEWAY_META.gateway_upi!;
+  const meta = GATEWAY_META[view] ?? GATEWAY_META['gateway_upi']!;
   const gatewaysState = useQuery(gatewaysQuery());
   const gateway = useMemo(
     () => gatewaysState.data?.find((g) => g.code === meta.code),

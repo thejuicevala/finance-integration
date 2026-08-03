@@ -215,7 +215,7 @@ function InvoiceGenerateForm() {
 }
 
 function InvoiceListView({ view }: { view: FinanceView }) {
-  const meta = VIEW_META[view] ?? VIEW_META.invoice_franchise!;
+  const meta = VIEW_META[view] ?? VIEW_META['invoice_franchise']!;
   const invoicesState = useQuery(invoicesQuery(meta.filters));
   const updateInvoice = useUpdateInvoice();
   const [search, setSearch] = useState("");
@@ -341,7 +341,7 @@ function InvoiceListView({ view }: { view: FinanceView }) {
 }
 
 export default function InvoiceSections({ view }: { view: FinanceView }) {
-  const meta = VIEW_META[view] ?? VIEW_META.invoice_franchise!;
+  const meta = VIEW_META[view] ?? VIEW_META['invoice_franchise']!;
 
   return (
     <SectionShell title={meta.title} description={meta.description} icon={FileText}>

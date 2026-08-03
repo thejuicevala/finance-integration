@@ -44,7 +44,7 @@ function monthly(sub: Subscription) {
 }
 
 export default function PlanSections({ view }: { view: FinanceView }) {
-  const meta = VIEW_META[view] ?? VIEW_META.plan_active!;
+  const meta = VIEW_META[view] ?? VIEW_META['plan_active']!;
   const plansState = useQuery(plansQuery());
   const subsState = useQuery(subscriptionsQuery());
   const updateSubscription = useUpdateSubscription();
