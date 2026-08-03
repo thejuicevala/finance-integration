@@ -35,7 +35,7 @@ export async function updatePayoutStatus(input: {
   id: string;
   status: "approved" | "rejected" | "processing" | "paid" | "on_hold";
   actor: string;
-  note?: string;
+  note?: string | undefined;
 }) {
   const patch: Json = { status: input.status, reviewer_note: input.note ?? null };
   if (input.status === "paid") patch['processed_at'] = new Date().toISOString();
@@ -63,7 +63,7 @@ export async function updateRefundStatus(input: {
   id: string;
   status: "approved" | "rejected" | "processed";
   actor: string;
-  note?: string;
+  note?: string | undefined;
 }) {
   const patch: Json = { status: input.status, reviewer_note: input.note ?? null };
   if (input.status === "processed") patch['processed_at'] = new Date().toISOString();
@@ -91,7 +91,7 @@ export async function decideApproval(input: {
   id: string;
   decision: "approved" | "rejected";
   actor: string;
-  note?: string;
+  note?: string | undefined;
 }) {
   const { data, error } = await supabaseAdmin
     .from("finance_approvals")
@@ -402,7 +402,7 @@ export async function createInvoice(input: {
   clientName: string;
   clientType: string;
   docType: "invoice" | "credit_note" | "debit_note" | "tax_invoice";
-  gstNumber?: string;
+  gstNumber?: string | undefined;
   dueDate: string;
   taxPercent: number;
   lineItems: { description: string; qty: number; rate: number }[];
