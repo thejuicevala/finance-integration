@@ -47,7 +47,7 @@ function isToday(dateStr: string | null | undefined) {
 }
 
 export default function OverviewSections({ view }: { view: FinanceView }) {
-  const meta = TITLES[view] ?? TITLES.overview_total_balance!;
+  const meta = TITLES[view] ?? TITLES['overview_total_balance']!;
 
   const metricsQ = useQuery(dailyMetricsQuery(180));
   const walletsQ = useQuery(walletsQuery());

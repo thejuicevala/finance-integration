@@ -41,7 +41,7 @@ const TITLES: Record<string, Meta> = {
 };
 
 export default function PaymentSections({ view }: { view: FinanceView }) {
-  const meta = TITLES[view] ?? TITLES.payment_incoming!;
+  const meta = TITLES[view] ?? TITLES['payment_incoming']!;
   const [search, setSearch] = useState("");
   const [gatewayFilter, setGatewayFilter] = useState<string>("all");
 

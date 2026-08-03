@@ -41,7 +41,7 @@ const TITLES: Record<string, { title: string; description: string; ownerType?: W
 };
 
 export default function WalletSections({ view }: { view: FinanceView }) {
-  const meta = TITLES[view] ?? TITLES.wallet_master!;
+  const meta = TITLES[view] ?? TITLES['wallet_master']!;
   const [search, setSearch] = useState("");
   const [dialog, setDialog] = useState<{ mode: "topup" | "deduct"; wallet: Wallet } | null>(null);
   const [amount, setAmount] = useState("");
