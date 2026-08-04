@@ -21,7 +21,7 @@ import { PanelCard, QueryState, SectionShell, StatCard, StatGrid, StatusBadge } 
 import { Button } from "@/components/ui/button";
 import { downloadCsv, formatCurrency, formatDate, percentChange, relativeTime } from "@/lib/finance/format";
 
-const PIE_COLORS = ["hsl(var(--success))", "hsl(var(--info))", "hsl(var(--primary))", "hsl(var(--warning))"];
+const PIE_COLORS = ["var(--success)", "var(--info)", "var(--primary)", "var(--warning)"];
 
 export default function RevenueDashboard() {
   const metricsState = useQuery(dailyMetricsQuery(180));
@@ -134,19 +134,19 @@ export default function RevenueDashboard() {
                 <ResponsiveContainer width="100%" height="100%">
                   <LineChart data={chartData}>
                     <CartesianGrid strokeDasharray="3 3" className="stroke-border" />
-                    <XAxis dataKey="date" fontSize={11} stroke="hsl(var(--muted-foreground))" />
-                    <YAxis fontSize={11} stroke="hsl(var(--muted-foreground))" tickFormatter={(v) => `${v / 1000}k`} />
+                    <XAxis dataKey="date" fontSize={11} stroke="var(--muted-foreground)" />
+                    <YAxis fontSize={11} stroke="var(--muted-foreground)" tickFormatter={(v) => `${v / 1000}k`} />
                     <Tooltip
                       contentStyle={{
-                        backgroundColor: "hsl(var(--card))",
-                        border: "1px solid hsl(var(--border))",
+                        backgroundColor: "var(--card)",
+                        border: "1px solid var(--border)",
                         borderRadius: "8px",
-                        color: "hsl(var(--foreground))",
+                        color: "var(--foreground)",
                       }}
                       formatter={(value: number) => [formatCurrency(value), ""]}
                     />
-                    <Line type="monotone" dataKey="revenue" stroke="hsl(var(--primary))" strokeWidth={2} dot={false} name="Revenue" />
-                    <Line type="monotone" dataKey="expenses" stroke="hsl(var(--destructive))" strokeWidth={2} dot={false} name="Expenses" />
+                    <Line type="monotone" dataKey="revenue" stroke="var(--primary)" strokeWidth={2} dot={false} name="Revenue" />
+                    <Line type="monotone" dataKey="expenses" stroke="var(--destructive)" strokeWidth={2} dot={false} name="Expenses" />
                   </LineChart>
                 </ResponsiveContainer>
               </div>
@@ -165,10 +165,10 @@ export default function RevenueDashboard() {
                     </Pie>
                     <Tooltip
                       contentStyle={{
-                        backgroundColor: "hsl(var(--card))",
-                        border: "1px solid hsl(var(--border))",
+                        backgroundColor: "var(--card)",
+                        border: "1px solid var(--border)",
                         borderRadius: "8px",
-                        color: "hsl(var(--foreground))",
+                        color: "var(--foreground)",
                       }}
                       formatter={(value: number) => [formatCurrency(value), ""]}
                     />
