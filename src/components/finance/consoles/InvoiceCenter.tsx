@@ -179,7 +179,7 @@ export default function InvoiceCenter() {
   const stats = useMemo(() => {
     const total = rows.length;
     const paid = rows.filter((i) => i.status === "paid").length;
-    const pending = rows.filter((i) => i.status === "sent" || i.status === "draft").length;
+    const pending = rows.filter((i) => i.status === "unpaid" || i.status === "draft").length;
     const overdue = rows.filter((i) => i.status === "overdue").length;
     return { total, paid, pending, overdue };
   }, [rows]);
@@ -278,11 +278,11 @@ export default function InvoiceCenter() {
 
                     <div className="flex items-center gap-1">
                       {invoice.status === "draft" && (
-                        <Button size="sm" variant="outline" className="h-8 gap-1" disabled={updateInvoice.isPending} onClick={() => act(invoice.id, "sent")}>
+                        <Button size="sm" variant="outline" className="h-8 gap-1" disabled={updateInvoice.isPending} onClick={() => act(invoice.id, "unpaid")}>
                           <Send className="h-3.5 w-3.5" /> Send
                         </Button>
                       )}
-                      {(invoice.status === "sent" || invoice.status === "overdue") && (
+                      {(invoice.status === "unpaid" || invoice.status === "overdue") && (
                         <Button size="sm" variant="outline" className="h-8 gap-1 text-success" disabled={updateInvoice.isPending} onClick={() => act(invoice.id, "paid")}>
                           <CheckCircle className="h-3.5 w-3.5" /> Mark Paid
                         </Button>
