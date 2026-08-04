@@ -20,7 +20,7 @@ const META: Record<string, { partnerType?: Commission["partner_type"]; label: st
 };
 
 export default function CommissionSections({ view }: { view: FinanceView }) {
-  const meta = META[view] ?? META.commission_franchise!;
+  const meta = META[view] ?? META["commission_franchise"]!;
   const commissionsState = useQuery(commissionsQuery(meta.partnerType));
   const payoutsState = useQuery(payoutsQuery());
   const updateCommission = useUpdateCommission();
