@@ -53,7 +53,7 @@ export default function RevenueDashboard() {
     const monthlyRevenue = latest ? Number(latest.revenue) : 0;
     const revenueChange = latest && prev ? percentChange(Number(latest.revenue), Number(prev.revenue)) : 0;
     const pendingCollection = invoices
-      .filter((i) => i.status === "sent" || i.status === "overdue")
+      .filter((i) => i.status === "unpaid" || i.status === "overdue")
       .reduce((sum, i) => sum + Number(i.total), 0);
     return { totalRevenue, totalProfit, monthlyRevenue, revenueChange, pendingCollection };
   }, [metrics, invoices]);
