@@ -5,7 +5,6 @@ import {
   Cpu,
   Server,
   AlertTriangle,
-  StopCircle,
   Target,
   Download,
   Play,
@@ -44,7 +43,7 @@ function providerKey(row: AiApiUsage) {
 }
 
 export default function AiBillingSections({ view }: { view: FinanceView }) {
-  const meta = META[view] ?? META.ai_usage_cost!;
+  const meta = META[view] ?? META["ai_usage_cost"]!;
   const allUsageState = useQuery(aiUsageQuery());
   const allRows = allUsageState.data ?? [];
 
