@@ -28,7 +28,7 @@ export const approvalSchema = z.object({
 
 export const invoiceStatusSchema = z.object({
   id,
-  status: z.enum(["draft", "sent", "paid", "overdue", "cancelled"]),
+  status: z.enum(["draft", "unpaid", "paid", "overdue", "cancelled"]),
   actor,
 });
 

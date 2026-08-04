@@ -40,7 +40,7 @@ const VIEW_META: Record<
 };
 
 const STATUS_FLOW: Record<string, Invoice["status"][]> = {
-  draft: ["sent", "cancelled"],
+  draft: ["unpaid", "cancelled"],
   sent: ["paid", "overdue", "cancelled"],
   overdue: ["paid", "cancelled"],
   paid: [],
@@ -232,7 +232,7 @@ function InvoiceListView({ view }: { view: FinanceView }) {
   const stats = useMemo(() => {
     const total = rows.reduce((sum, r) => sum + Number(r.total), 0);
     const paid = rows.filter((r) => r.status === "paid").reduce((sum, r) => sum + Number(r.total), 0);
-    const pending = rows.filter((r) => r.status === "sent").reduce((sum, r) => sum + Number(r.total), 0);
+    const pending = rows.filter((r) => r.status === "unpaid").reduce((sum, r) => sum + Number(r.total), 0);
     const overdue = rows.filter((r) => r.status === "overdue").reduce((sum, r) => sum + Number(r.total), 0);
     return { total, paid, pending, overdue };
   }, [rows]);

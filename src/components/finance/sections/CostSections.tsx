@@ -25,7 +25,7 @@ const META: Record<string, { category?: Expense["category"]; label: string; icon
 const CATEGORY_OPTIONS = ["server", "ai_api", "marketing", "support", "salary", "tools", "misc"];
 
 export default function CostSections({ view }: { view: FinanceView }) {
-  const meta = META[view] ?? META.cost_server!;
+  const meta = META[view] ?? META["cost_server"]!;
   const expensesState = useQuery(expensesQuery(meta.category));
   const allExpensesState = useQuery(expensesQuery());
   const aiUsageState = useQuery(aiUsageQuery());

@@ -21,7 +21,7 @@ import { PanelCard, QueryState, SectionShell, StatCard, StatGrid, StatusBadge } 
 import { Button } from "@/components/ui/button";
 import { downloadCsv, formatCurrency, formatDate, percentChange, relativeTime } from "@/lib/finance/format";
 
-const PIE_COLORS = ["hsl(var(--success))", "hsl(var(--info))", "hsl(var(--primary))", "hsl(var(--warning))"];
+const PIE_COLORS = ["var(--success)", "var(--info)", "var(--primary)", "var(--warning)"];
 
 export default function RevenueDashboard() {
   const metricsState = useQuery(dailyMetricsQuery(180));
@@ -53,7 +53,7 @@ export default function RevenueDashboard() {
     const monthlyRevenue = latest ? Number(latest.revenue) : 0;
     const revenueChange = latest && prev ? percentChange(Number(latest.revenue), Number(prev.revenue)) : 0;
     const pendingCollection = invoices
-      .filter((i) => i.status === "sent" || i.status === "overdue")
+      .filter((i) => i.status === "unpaid" || i.status === "overdue")
       .reduce((sum, i) => sum + Number(i.total), 0);
     return { totalRevenue, totalProfit, monthlyRevenue, revenueChange, pendingCollection };
   }, [metrics, invoices]);
@@ -61,7 +61,7 @@ export default function RevenueDashboard() {
   const incomeBreakdown = useMemo(() => {
     const byCategory = new Map<string, number>();
     for (const t of transactions) {
-      if (t.direction !== "inflow") continue;
+      if (t.direction !== "credit") continue;
       byCategory.set(t.category, (byCategory.get(t.category) ?? 0) + Number(t.amount));
     }
     return Array.from(byCategory.entries()).map(([name, value]) => ({ name, value }));
@@ -134,19 +134,19 @@ export default function RevenueDashboard() {
                 <ResponsiveContainer width="100%" height="100%">
                   <LineChart data={chartData}>
                     <CartesianGrid strokeDasharray="3 3" className="stroke-border" />
-                    <XAxis dataKey="date" fontSize={11} stroke="hsl(var(--muted-foreground))" />
-                    <YAxis fontSize={11} stroke="hsl(var(--muted-foreground))" tickFormatter={(v) => `${v / 1000}k`} />
+                    <XAxis dataKey="date" fontSize={11} stroke="var(--muted-foreground)" />
+                    <YAxis fontSize={11} stroke="var(--muted-foreground)" tickFormatter={(v) => `${v / 1000}k`} />
                     <Tooltip
                       contentStyle={{
-                        backgroundColor: "hsl(var(--card))",
-                        border: "1px solid hsl(var(--border))",
+                        backgroundColor: "var(--card)",
+                        border: "1px solid var(--border)",
                         borderRadius: "8px",
-                        color: "hsl(var(--foreground))",
+                        color: "var(--foreground)",
                       }}
                       formatter={(value: number) => [formatCurrency(value), ""]}
                     />
-                    <Line type="monotone" dataKey="revenue" stroke="hsl(var(--primary))" strokeWidth={2} dot={false} name="Revenue" />
-                    <Line type="monotone" dataKey="expenses" stroke="hsl(var(--destructive))" strokeWidth={2} dot={false} name="Expenses" />
+                    <Line type="monotone" dataKey="revenue" stroke="var(--primary)" strokeWidth={2} dot={false} name="Revenue" />
+                    <Line type="monotone" dataKey="expenses" stroke="var(--destructive)" strokeWidth={2} dot={false} name="Expenses" />
                   </LineChart>
                 </ResponsiveContainer>
               </div>
@@ -165,10 +165,10 @@ export default function RevenueDashboard() {
                     </Pie>
                     <Tooltip
                       contentStyle={{
-                        backgroundColor: "hsl(var(--card))",
-                        border: "1px solid hsl(var(--border))",
+                        backgroundColor: "var(--card)",
+                        border: "1px solid var(--border)",
                         borderRadius: "8px",
-                        color: "hsl(var(--foreground))",
+                        color: "var(--foreground)",
                       }}
                       formatter={(value: number) => [formatCurrency(value), ""]}
                     />
@@ -198,10 +198,10 @@ export default function RevenueDashboard() {
                   <div className="flex items-center gap-3">
                     <span
                       className={`flex h-8 w-8 items-center justify-center rounded-lg ${
-                        tx.direction === "inflow" ? "bg-success/15 text-success" : "bg-warning/15 text-warning"
+                        tx.direction === "credit" ? "bg-success/15 text-success" : "bg-warning/15 text-warning"
                       }`}
                     >
-                      {tx.direction === "inflow" ? <ArrowDownRight className="h-4 w-4" /> : <ArrowUpRight className="h-4 w-4" />}
+                      {tx.direction === "credit" ? <ArrowDownRight className="h-4 w-4" /> : <ArrowUpRight className="h-4 w-4" />}
                     </span>
                     <div>
                       <p className="text-sm font-medium text-foreground">{tx.counterparty}</p>
@@ -210,8 +210,8 @@ export default function RevenueDashboard() {
                   </div>
                   <div className="flex items-center gap-3">
                     <StatusBadge status={tx.status} />
-                    <span className={`text-sm font-semibold ${tx.direction === "inflow" ? "text-success" : "text-foreground"}`}>
-                      {tx.direction === "inflow" ? "+" : "-"}
+                    <span className={`text-sm font-semibold ${tx.direction === "credit" ? "text-success" : "text-foreground"}`}>
+                      {tx.direction === "credit" ? "+" : "-"}
                       {formatCurrency(tx.amount)}
                     </span>
                   </div>

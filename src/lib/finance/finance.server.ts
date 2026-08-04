@@ -118,7 +118,7 @@ export async function decideApproval(input: {
 
 export async function updateInvoiceStatus(input: {
   id: string;
-  status: "draft" | "sent" | "paid" | "overdue" | "cancelled";
+  status: "draft" | "unpaid" | "paid" | "overdue" | "cancelled";
   actor: string;
 }) {
   const patch: Json = { status: input.status };
