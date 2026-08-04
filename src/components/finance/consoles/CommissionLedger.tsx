@@ -51,12 +51,12 @@ export default function CommissionLedger() {
   const chartData = useMemo(() => {
     const byPeriod = new Map<string, Record<string, number>>();
     for (const c of rows) {
-      const entry = byPeriod.get(c.period) ?? { period: 0 };
+      const entry = byPeriod.get(c.period) ?? {};
       entry[c.partner_type] = (entry[c.partner_type] ?? 0) + Number(c.commission_amount);
       byPeriod.set(c.period, entry);
     }
     return Array.from(byPeriod.entries())
-      .map(([period, values]) => ({ period, ...values }))
+      .map(([period, values]) => ({ ...values, period }))
       .sort((a, b) => a.period.localeCompare(b.period))
       .slice(-6);
   }, [rows]);
