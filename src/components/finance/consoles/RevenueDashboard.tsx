@@ -61,7 +61,7 @@ export default function RevenueDashboard() {
   const incomeBreakdown = useMemo(() => {
     const byCategory = new Map<string, number>();
     for (const t of transactions) {
-      if (t.direction !== "inflow") continue;
+      if (t.direction !== "credit") continue;
       byCategory.set(t.category, (byCategory.get(t.category) ?? 0) + Number(t.amount));
     }
     return Array.from(byCategory.entries()).map(([name, value]) => ({ name, value }));
@@ -198,10 +198,10 @@ export default function RevenueDashboard() {
                   <div className="flex items-center gap-3">
                     <span
                       className={`flex h-8 w-8 items-center justify-center rounded-lg ${
-                        tx.direction === "inflow" ? "bg-success/15 text-success" : "bg-warning/15 text-warning"
+                        tx.direction === "credit" ? "bg-success/15 text-success" : "bg-warning/15 text-warning"
                       }`}
                     >
-                      {tx.direction === "inflow" ? <ArrowDownRight className="h-4 w-4" /> : <ArrowUpRight className="h-4 w-4" />}
+                      {tx.direction === "credit" ? <ArrowDownRight className="h-4 w-4" /> : <ArrowUpRight className="h-4 w-4" />}
                     </span>
                     <div>
                       <p className="text-sm font-medium text-foreground">{tx.counterparty}</p>
@@ -210,8 +210,8 @@ export default function RevenueDashboard() {
                   </div>
                   <div className="flex items-center gap-3">
                     <StatusBadge status={tx.status} />
-                    <span className={`text-sm font-semibold ${tx.direction === "inflow" ? "text-success" : "text-foreground"}`}>
-                      {tx.direction === "inflow" ? "+" : "-"}
+                    <span className={`text-sm font-semibold ${tx.direction === "credit" ? "text-success" : "text-foreground"}`}>
+                      {tx.direction === "credit" ? "+" : "-"}
                       {formatCurrency(tx.amount)}
                     </span>
                   </div>

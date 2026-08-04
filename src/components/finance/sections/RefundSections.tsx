@@ -70,7 +70,7 @@ function ReasonBreakdown({ refunds }: { refunds: Refund[] }) {
 function RefundQueue({ view }: { view: FinanceView }) {
   const meta = VIEW_META[view] ?? VIEW_META["refund_requests"]!;
   const refundsState = useQuery(refundsQuery(meta.status));
-  const txnState = useQuery(transactionsQuery({ direction: "inflow", limit: 150 }));
+  const txnState = useQuery(transactionsQuery({ direction: "credit", limit: 150 }));
   const updateRefund = useUpdateRefund();
   const [search, setSearch] = useState("");
   const [notes, setNotes] = useState<Record<string, string>>({});
