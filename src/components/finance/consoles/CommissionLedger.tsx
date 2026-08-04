@@ -123,22 +123,22 @@ export default function CommissionLedger() {
               <ResponsiveContainer width="100%" height="100%">
                 <BarChart data={chartData}>
                   <CartesianGrid strokeDasharray="3 3" className="stroke-border" />
-                  <XAxis dataKey="period" fontSize={11} stroke="hsl(var(--muted-foreground))" />
-                  <YAxis fontSize={11} stroke="hsl(var(--muted-foreground))" tickFormatter={(v: number) => `${v / 1000}k`} />
+                  <XAxis dataKey="period" fontSize={11} stroke="var(--muted-foreground)" />
+                  <YAxis fontSize={11} stroke="var(--muted-foreground)" tickFormatter={(v: number) => `${v / 1000}k`} />
                   <Tooltip
                     contentStyle={{
-                      backgroundColor: "hsl(var(--card))",
-                      border: "1px solid hsl(var(--border))",
+                      backgroundColor: "var(--card)",
+                      border: "1px solid var(--border)",
                       borderRadius: "8px",
-                      color: "hsl(var(--foreground))",
+                      color: "var(--foreground)",
                     }}
                     formatter={(value: number) => [formatCurrency(value), ""]}
                   />
                   <Legend />
-                  <Bar dataKey="reseller" name="Reseller" fill="hsl(var(--primary))" radius={[4, 4, 0, 0]} />
-                  <Bar dataKey="franchise" name="Franchise" fill="hsl(var(--info))" radius={[4, 4, 0, 0]} />
-                  <Bar dataKey="influencer" name="Influencer" fill="hsl(var(--warning))" radius={[4, 4, 0, 0]} />
-                  <Bar dataKey="developer" name="Developer" fill="hsl(var(--success))" radius={[4, 4, 0, 0]} />
+                  <Bar dataKey="reseller" name="Reseller" fill="var(--primary)" radius={[4, 4, 0, 0]} />
+                  <Bar dataKey="franchise" name="Franchise" fill="var(--info)" radius={[4, 4, 0, 0]} />
+                  <Bar dataKey="influencer" name="Influencer" fill="var(--warning)" radius={[4, 4, 0, 0]} />
+                  <Bar dataKey="developer" name="Developer" fill="var(--success)" radius={[4, 4, 0, 0]} />
                 </BarChart>
               </ResponsiveContainer>
             </div>
