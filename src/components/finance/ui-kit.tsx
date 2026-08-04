@@ -77,7 +77,9 @@ export function StatCard({
           {loading ? (
             <Skeleton className="h-7 w-28" />
           ) : (
-            <p className="truncate font-display text-2xl font-semibold text-foreground">{value}</p>
+            <p className="break-words font-display text-xl font-semibold leading-tight text-foreground @[15rem]:text-2xl">
+              {value}
+            </p>
           )}
           {hint ? <p className="text-xs text-muted-foreground">{hint}</p> : null}
         </div>
