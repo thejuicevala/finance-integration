@@ -77,7 +77,7 @@ export function StatCard({
           {loading ? (
             <Skeleton className="h-7 w-28" />
           ) : (
-            <p className="break-words font-display text-xl font-semibold leading-tight text-foreground @[15rem]:text-2xl">
+            <p className="break-words font-display text-xl font-semibold leading-tight text-foreground">
               {value}
             </p>
           )}
