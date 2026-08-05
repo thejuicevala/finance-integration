@@ -1,6 +1,5 @@
 import { useMemo, useState } from "react";
 import { useQuery } from "@tanstack/react-query";
-import { toast } from "sonner";
 import {
   Cpu,
   Server,
@@ -12,7 +11,8 @@ import {
 } from "lucide-react";
 import { AreaChart, Area, BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer, Legend } from "recharts";
 
-import { aiUsageQuery } from "@/lib/finance/queries";
+import { aiControlsQuery, aiUsageQuery } from "@/lib/finance/queries";
+import { useUpdateAiControl } from "@/lib/finance/mutations";
 import type { FinanceView } from "@/lib/finance/views";
 import type { AiApiUsage } from "@/lib/finance/types";
 import { PanelCard, QueryState, SectionShell, StatCard, StatGrid, StatusBadge } from "@/components/finance/ui-kit";
@@ -45,7 +45,10 @@ function providerKey(row: AiApiUsage) {
 export default function AiBillingSections({ view }: { view: FinanceView }) {
   const meta = META[view] ?? META["ai_usage_cost"]!;
   const allUsageState = useQuery(aiUsageQuery());
+  const controlsState = useQuery(aiControlsQuery());
+  const updateControl = useUpdateAiControl();
   const allRows = allUsageState.data ?? [];
+  const controls = controlsState.data ?? [];
 
   const rows = useMemo(() => {
     if (view === "ai_usage_cost") return allRows.filter((r) => isAiProvider(r.provider));
@@ -54,7 +57,6 @@ export default function AiBillingSections({ view }: { view: FinanceView }) {
   }, [allRows, view]);
 
   const [search, setSearch] = useState("");
-  const [localOverrides, setLocalOverrides] = useState<Record<string, "active" | "stopped">>({});
   const [budgets, setBudgets] = useState<Record<string, string>>({});
 
   const filteredRows = useMemo(() => {
@@ -151,24 +153,23 @@ export default function AiBillingSections({ view }: { view: FinanceView }) {
     })));
   };
 
-  const toggleService = (key: string, provider: string, service: string) => {
-    setLocalOverrides((prev) => {
-      const current = prev[key] ?? "active";
-      const next: "active" | "stopped" = current === "active" ? "stopped" : "active";
-      toast[next === "stopped" ? "error" : "success"](
-        next === "stopped" ? `Stopped billing for ${provider} / ${service} (operator override)` : `Resumed billing for ${provider} / ${service}`,
-      );
-      return { ...prev, [key]: next };
+  const controlFor = (provider: string, service: string) =>
+    controls.find((control) => control.provider === provider && control.service === service);
+
+  const toggleService = (provider: string, service: string) => {
+    const current = controlFor(provider, service)?.status ?? "active";
+    updateControl.mutate({
+      provider,
+      service,
+      status: current === "active" ? "stopped" : "active",
+      actor: "finance_manager",
     });
   };
 
   const handleSaveBudget = (key: string, provider: string, service: string) => {
-    const value = budgets[key];
-    if (!value || Number(value) <= 0) {
-      toast.error("Enter a valid budget amount");
-      return;
-    }
-    toast.success(`Budget limit of ${formatCurrency(Number(value))} set for ${provider} / ${service} (operator setting, not persisted server-side)`);
+    const value = budgets[key] ?? String(controlFor(provider, service)?.budget ?? "");
+    if (!value || Number(value) <= 0) return;
+    updateControl.mutate({ provider, service, budget: Number(value), actor: "finance_manager" });
   };
 
   const kpiIcon = view === "api_usage_cost" ? Server : Cpu;
@@ -232,7 +233,7 @@ export default function AiBillingSections({ view }: { view: FinanceView }) {
             <QueryState isLoading={allUsageState.isLoading} error={allUsageState.error} isEmpty={services.length === 0}>
               <div className="space-y-3">
                 {services.map((s) => {
-                  const status = localOverrides[s.key] ?? "active";
+                   const status = controlFor(s.provider, s.service)?.status ?? "active";
                   return (
                     <div key={s.key} className="flex items-center justify-between rounded-lg border border-border p-4">
                       <div className="flex items-center gap-4">
@@ -250,11 +251,12 @@ export default function AiBillingSections({ view }: { view: FinanceView }) {
                           <p className="text-xs text-muted-foreground">total spend</p>
                         </div>
                         <div className="flex items-center gap-3">
-                          <Switch checked={status === "active"} onCheckedChange={() => toggleService(s.key, s.provider, s.service)} />
+                           <Switch checked={status === "active"} disabled={updateControl.isPending} onCheckedChange={() => toggleService(s.provider, s.service)} />
                           <Button
                             variant={status === "active" ? "destructive" : "default"}
                             size="sm"
-                            onClick={() => toggleService(s.key, s.provider, s.service)}
+                             disabled={updateControl.isPending}
+                             onClick={() => toggleService(s.provider, s.service)}
                           >
                             {status === "active" ? <Pause className="h-4 w-4" /> : <Play className="h-4 w-4" />}
                           </Button>
@@ -273,7 +275,8 @@ export default function AiBillingSections({ view }: { view: FinanceView }) {
             <QueryState isLoading={allUsageState.isLoading} error={allUsageState.error} isEmpty={services.length === 0}>
               <div className="space-y-4">
                 {services.slice(0, 15).map((s) => {
-                  const budgetValue = budgets[s.key] ?? "";
+                   const savedBudget = controlFor(s.provider, s.service)?.budget ?? 0;
+                   const budgetValue = budgets[s.key] ?? String(savedBudget || "");
                   const budgetNum = Number(budgetValue) || 0;
                   const pct = budgetNum > 0 ? Math.min((s.total / budgetNum) * 100, 100) : 0;
                   return (
@@ -292,7 +295,7 @@ export default function AiBillingSections({ view }: { view: FinanceView }) {
                         />
                         <Progress value={pct} className={`h-2 flex-1 ${pct > 80 ? "[&>div]:bg-warning" : ""}`} />
                         <span className="w-10 text-xs text-muted-foreground">{budgetNum > 0 ? `${pct.toFixed(0)}%` : "—"}</span>
-                        <Button size="sm" variant="outline" onClick={() => handleSaveBudget(s.key, s.provider, s.service)}>Save</Button>
+                         <Button size="sm" variant="outline" disabled={updateControl.isPending || Number(budgetValue) <= 0} onClick={() => handleSaveBudget(s.key, s.provider, s.service)}>Save</Button>
                       </div>
                     </div>
                   );

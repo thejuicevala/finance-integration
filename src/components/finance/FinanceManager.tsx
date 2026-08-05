@@ -1,11 +1,12 @@
 import { useMemo, useState } from "react";
-import { Menu, RefreshCcw, Search } from "lucide-react";
+import { Bell, Menu, RefreshCcw, Search } from "lucide-react";
 import { useQueryClient } from "@tanstack/react-query";
 
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Sheet, SheetContent, SheetTitle, SheetTrigger } from "@/components/ui/sheet";
 import { FinanceSidebar, FINANCE_GROUPS, VIEW_LABELS } from "./FinanceSidebar";
+import { FinanceNotifications } from "./FinanceNotifications";
 import type { FinanceView } from "@/lib/finance/views";
 
 import OverviewSections from "./sections/OverviewSections";
@@ -46,6 +47,7 @@ export function FinanceManager() {
   const [view, setView] = useState<FinanceView>("overview_total_balance");
   const [search, setSearch] = useState("");
   const [mobileOpen, setMobileOpen] = useState(false);
+  const [notificationsOpen, setNotificationsOpen] = useState(false);
   const queryClient = useQueryClient();
 
   const groupId = useMemo(
@@ -129,11 +131,15 @@ export function FinanceManager() {
             <RefreshCcw className="mr-2 h-4 w-4" />
             Refresh
           </Button>
+          <Button variant="ghost" size="icon" aria-label="Open finance notifications" onClick={() => setNotificationsOpen(true)}>
+            <Bell className="h-4 w-4" />
+          </Button>
         </header>
 
         <main className="flex-1 px-4 py-6 lg:px-8">
           <Section view={view} />
         </main>
+        <FinanceNotifications open={notificationsOpen} onOpenChange={setNotificationsOpen} />
       </div>
     </div>
   );

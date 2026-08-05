@@ -2,6 +2,7 @@ import { createServerFn } from "@tanstack/react-start";
 import { z } from "zod";
 import {
   actorSchema,
+  aiControlSchema,
   adjustWalletSchema,
   approvalSchema,
   commissionSchema,
@@ -93,6 +94,13 @@ export const subscriptionStatusFn = createServerFn({ method: "POST" })
   .handler(async ({ data }) => {
     const { updateSubscriptionStatus } = await import("./finance.server");
     return updateSubscriptionStatus(data);
+  });
+
+export const aiControlFn = createServerFn({ method: "POST" })
+  .inputValidator((d: unknown) => aiControlSchema.parse(d))
+  .handler(async ({ data }) => {
+    const { updateAiControl } = await import("./finance.server");
+    return updateAiControl(data);
   });
 
 export const taxStatusFn = createServerFn({ method: "POST" })

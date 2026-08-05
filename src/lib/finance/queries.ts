@@ -3,6 +3,7 @@ import { supabase } from "@/integrations/supabase/client";
 import type {
   ActivityHeat,
   AiApiUsage,
+  AiControl,
   Approval,
   AuditLog,
   Commission,
@@ -154,6 +155,15 @@ export const aiUsageQuery = (providerFilter?: "ai" | "api") =>
     queryFn: () =>
       unwrap<AiApiUsage[]>(
         supabase.from("finance_ai_api_usage").select("*").order("usage_date", { ascending: false }).limit(400),
+      ),
+  });
+
+export const aiControlsQuery = () =>
+  queryOptions({
+    queryKey: financeKeys.entity("ai-controls"),
+    queryFn: () =>
+      unwrap<AiControl[]>(
+        supabase.from("finance_ai_controls").select("*").order("provider").order("service"),
       ),
   });
 

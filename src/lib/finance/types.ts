@@ -13,6 +13,7 @@ export type Commission = T["finance_commissions"]["Row"];
 export type Payout = T["finance_payouts"]["Row"];
 export type Expense = T["finance_expenses"]["Row"];
 export type AiApiUsage = T["finance_ai_api_usage"]["Row"];
+export type AiControl = T["finance_ai_controls"]["Row"];
 export type Refund = T["finance_refunds"]["Row"];
 export type TaxRecord = T["finance_tax_records"]["Row"];
 export type FinanceAlert = T["finance_alerts"]["Row"];

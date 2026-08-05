@@ -76,6 +76,17 @@ export const expenseStatusSchema = z.object({
 export const subscriptionSchema = z.object({
   id,
   status: z.enum(["active", "cancelled", "paused", "expired"]),
+  planId: id.optional(),
+  actor,
+});
+
+export const aiControlSchema = z.object({
+  provider: z.string().min(1),
+  service: z.string().min(1),
+  status: z.enum(["active", "stopped"]).optional(),
+  budget: z.number().min(0).optional(),
+  spikeThreshold: z.number().min(0).optional(),
+  autoStopPercent: z.number().min(1).max(100).optional(),
   actor,
 });
 

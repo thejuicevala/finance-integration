@@ -4,6 +4,7 @@ import { toast } from "sonner";
 
 import {
   adjustWalletFn,
+  aiControlFn,
   alertStatusFn,
   approvalDecisionFn,
   commissionStatusFn,
@@ -58,6 +59,8 @@ export const useUpdateExpense = () =>
   useFinanceMutation(useServerFn(expenseStatusFn), "Expense updated");
 export const useUpdateSubscription = () =>
   useFinanceMutation(useServerFn(subscriptionStatusFn), "Subscription updated");
+export const useUpdateAiControl = () =>
+  useFinanceMutation(useServerFn(aiControlFn), "AI billing control saved");
 export const useUpdateTaxRecord = () =>
   useFinanceMutation(useServerFn(taxStatusFn), "Tax record updated");
 export const useUpdateFraudAlert = () =>

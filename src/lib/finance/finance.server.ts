@@ -149,44 +149,24 @@ export async function adjustWallet(input: {
   reason: string;
   actor: string;
 }) {
-  const { data: wallet, error: readError } = await supabaseAdmin
-    .from("finance_wallets")
-    .select("*")
-    .eq("id", input.walletId)
-    .single();
-  if (readError) fail(readError.message);
-
-  const delta = input.entryType === "credit" ? input.amount : -input.amount;
-  const nextBalance = Number(wallet.balance) + delta;
-  if (nextBalance < 0) fail("Adjustment would push the wallet balance below zero.");
-
-  const { error: txError } = await supabaseAdmin.from("finance_wallet_transactions").insert({
-    wallet_id: wallet.id,
-    entry_type: input.entryType,
-    amount: input.amount,
-    balance_after: nextBalance,
-    reference: `ADJ-${Date.now().toString(36).toUpperCase()}`,
-    note: input.reason,
-    performed_by: input.actor,
-    status: "completed",
-  } as never);
-  if (txError) fail(txError.message);
-
   const { data, error } = await supabaseAdmin
-    .from("finance_wallets")
-    .update({ balance: nextBalance, last_activity_at: new Date().toISOString() } as never)
-    .eq("id", wallet.id)
-    .select("*")
-    .single();
+    .rpc("finance_adjust_wallet_atomic", {
+      p_wallet_id: input.walletId,
+      p_amount: input.amount,
+      p_entry_type: input.entryType,
+      p_reason: input.reason,
+      p_actor: input.actor,
+      p_reference: `ADJ-${Date.now().toString(36).toUpperCase()}`,
+    });
   if (error) fail(error.message);
 
   await writeAudit({
     actor: input.actor,
     action: `wallet.${input.entryType}`,
     entity: "finance_wallets",
-    entity_ref: wallet.owner_code,
+    entity_ref: data.owner_code,
     severity: "warning",
-    details: { amount: input.amount, reason: input.reason, balance_after: nextBalance },
+    details: { amount: input.amount, reason: input.reason, balance_after: data.balance },
   });
   return ok(data);
 }
@@ -289,11 +269,20 @@ export async function updateExpenseStatus(input: {
 export async function updateSubscriptionStatus(input: {
   id: string;
   status: "active" | "cancelled" | "paused" | "expired";
+  planId?: string | undefined;
   actor: string;
 }) {
+  const patch: Json = { status: input.status };
+  if (input.planId) {
+    const { data: plan, error: planError } = await supabaseAdmin.from("finance_plans").select("id, name, price").eq("id", input.planId).single();
+    if (planError) fail(planError.message);
+    patch['plan_id'] = plan.id;
+    patch['amount'] = plan.price;
+    patch['previous_plan'] = plan.name;
+  }
   const { data, error } = await supabaseAdmin
     .from("finance_subscriptions")
-    .update({ status: input.status } as never)
+    .update(patch as never)
     .eq("id", input.id)
     .select("*")
     .single();
@@ -306,6 +295,26 @@ export async function updateSubscriptionStatus(input: {
     entity_ref: data.customer_name,
     details: { amount: data.amount },
   });
+  return ok(data);
+}
+
+export async function updateAiControl(input: {
+  provider: string;
+  service: string;
+  status?: "active" | "stopped" | undefined;
+  budget?: number | undefined;
+  spikeThreshold?: number | undefined;
+  autoStopPercent?: number | undefined;
+  actor: string;
+}) {
+  const patch: Json = { provider: input.provider, service: input.service, updated_at: new Date().toISOString() };
+  if (input.status !== undefined) patch['status'] = input.status;
+  if (input.budget !== undefined) patch['budget'] = input.budget;
+  if (input.spikeThreshold !== undefined) patch['spike_threshold'] = input.spikeThreshold;
+  if (input.autoStopPercent !== undefined) patch['auto_stop_percent'] = input.autoStopPercent;
+  const { data, error } = await supabaseAdmin.from("finance_ai_controls").upsert(patch as never, { onConflict: "provider,service" }).select("*").single();
+  if (error) fail(error.message);
+  await writeAudit({ actor: input.actor, action: "ai_billing.control_update", entity: "finance_ai_controls", entity_ref: `${input.provider}/${input.service}`, severity: "warning", details: patch });
   return ok(data);
 }
 
