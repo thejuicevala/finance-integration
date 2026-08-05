@@ -17,6 +17,8 @@ export const Route = createFileRoute("/")({
         content:
           "Wallets, payments, gateways, invoices, subscriptions, commissions, expenses, tax and fraud monitoring in one console.",
       },
+      { property: "og:type", content: "website" },
+      { name: "twitter:card", content: "summary_large_image" },
     ],
   }),
   component: FinanceManager,
