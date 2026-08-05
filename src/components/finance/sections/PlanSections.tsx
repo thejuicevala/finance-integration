@@ -196,7 +196,7 @@ export default function PlanSections({ view }: { view: FinanceView }) {
                                 className="h-7 gap-1 px-2 text-xs"
                                 disabled={updateSubscription.isPending}
                                 onClick={() =>
-                                  updateSubscription.mutate({ id: sub.id, status: "active", actor: "finance_manager" })
+                                  updateSubscription.mutate({ id: sub.id, status: "active", planId: upgradeTo.id, actor: "finance_manager" })
                                 }
                               >
                                 <ArrowUpRight className="h-3 w-3" />
@@ -210,7 +210,7 @@ export default function PlanSections({ view }: { view: FinanceView }) {
                                 className="h-7 gap-1 px-2 text-xs"
                                 disabled={updateSubscription.isPending}
                                 onClick={() =>
-                                  updateSubscription.mutate({ id: sub.id, status: "active", actor: "finance_manager" })
+                                  updateSubscription.mutate({ id: sub.id, status: "active", planId: downgradeTo.id, actor: "finance_manager" })
                                 }
                               >
                                 <ArrowDownRight className="h-3 w-3" />

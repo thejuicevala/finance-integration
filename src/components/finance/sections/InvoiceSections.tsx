@@ -41,7 +41,7 @@ const VIEW_META: Record<
 
 const STATUS_FLOW: Record<string, Invoice["status"][]> = {
   draft: ["unpaid", "cancelled"],
-  sent: ["paid", "overdue", "cancelled"],
+  unpaid: ["paid", "overdue", "cancelled"],
   overdue: ["paid", "cancelled"],
   paid: [],
   cancelled: [],

@@ -85,8 +85,8 @@ export default function OverviewSections({ view }: { view: FinanceView }) {
 
   const pendingAmount = useMemo(() => {
     const pendingTxn = transactions.filter((t) => t.status === "pending").reduce((s, t) => s + Number(t.amount), 0);
-    const pendingInvoices = invoices.filter((i) => i.status === "pending" || i.status === "overdue").reduce((s, i) => s + Number(i.total), 0);
-    const pendingPayouts = payouts.filter((p) => p.status === "pending").reduce((s, p) => s + Number(p.amount), 0);
+    const pendingInvoices = invoices.filter((i) => i.status === "unpaid" || i.status === "overdue").reduce((s, i) => s + Number(i.total), 0);
+    const pendingPayouts = payouts.filter((p) => ["requested", "approved", "processing", "on_hold"].includes(p.status)).reduce((s, p) => s + Number(p.amount), 0);
     return pendingTxn + pendingInvoices + pendingPayouts;
   }, [transactions, invoices, payouts]);
 
@@ -135,8 +135,8 @@ export default function OverviewSections({ view }: { view: FinanceView }) {
   const pendingRows = useMemo(() => {
     const rows: { id: string; type: string; label: string; amount: number; status: string; date: string | null }[] = [];
     transactions.filter((t) => t.status === "pending").forEach((t) => rows.push({ id: t.id, type: "Transaction", label: t.counterparty, amount: Number(t.amount), status: t.status, date: t.occurred_at }));
-    invoices.filter((i) => i.status === "pending" || i.status === "overdue").forEach((i) => rows.push({ id: i.id, type: "Invoice", label: i.client_name, amount: Number(i.total), status: i.status, date: i.due_date }));
-    payouts.filter((p) => p.status === "pending").forEach((p) => rows.push({ id: p.id, type: "Payout", label: p.recipient_name, amount: Number(p.amount), status: p.status, date: p.requested_at }));
+    invoices.filter((i) => i.status === "unpaid" || i.status === "overdue").forEach((i) => rows.push({ id: i.id, type: "Invoice", label: i.client_name, amount: Number(i.total), status: i.status, date: i.due_date }));
+    payouts.filter((p) => ["requested", "approved", "processing", "on_hold"].includes(p.status)).forEach((p) => rows.push({ id: p.id, type: "Payout", label: p.recipient_name, amount: Number(p.amount), status: p.status, date: p.requested_at }));
     return rows.sort((a, b) => new Date(b.date ?? 0).getTime() - new Date(a.date ?? 0).getTime());
   }, [transactions, invoices, payouts]);
 
