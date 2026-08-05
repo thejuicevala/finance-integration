@@ -167,7 +167,6 @@ export default function AiBillingSections({ view }: { view: FinanceView }) {
   };
 
   const handleSaveBudget = (key: string, provider: string, service: string) => {
-    const value = budgets[key];
     const value = budgets[key] ?? String(controlFor(provider, service)?.budget ?? "");
     if (!value || Number(value) <= 0) return;
     updateControl.mutate({ provider, service, budget: Number(value), actor: "finance_manager" });
