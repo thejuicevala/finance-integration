@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import {
   Activity,
   AlertTriangle,
@@ -227,12 +227,20 @@ export function FinanceSidebar({
   const activeGroup = FINANCE_GROUPS.find((g) => g.items.some((i) => i.id === activeView))?.id;
   const [open, setOpen] = useState<string[]>(activeGroup ? [activeGroup] : ["overview"]);
 
+  // Keep the group containing the active view expanded, even when the view
+  // changes programmatically (e.g. from the header search).
+  useEffect(() => {
+    if (activeGroup) setOpen((prev) => (prev.includes(activeGroup) ? prev : [...prev, activeGroup]));
+  }, [activeGroup]);
+
   const toggle = (id: string) =>
     setOpen((prev) => (prev.includes(id) ? prev.filter((g) => g !== id) : [...prev, id]));
 
+
   return (
     <ScrollArea className="h-full">
-      <nav className="space-y-1 p-3">
+      <nav className="space-y-1 p-3" aria-label="Finance modules">
+
         <div className="mb-4 flex items-center gap-3 px-2">
           <span className="flex h-9 w-9 items-center justify-center rounded-xl bg-primary/15 text-primary">
             <ArrowUpCircle className="h-5 w-5" />
@@ -251,37 +259,47 @@ export function FinanceSidebar({
             <div key={group.id}>
               <Button
                 variant="ghost"
+                id={`finance-group-${group.id}`}
                 onClick={() => toggle(group.id)}
+                aria-expanded={isOpen}
+                aria-controls={`finance-group-panel-${group.id}`}
                 className={cn(
                   "h-9 w-full justify-between px-2 text-[13px] font-medium",
                   hasActive ? "text-primary" : "text-muted-foreground hover:text-foreground",
                 )}
               >
                 <span className="flex items-center gap-2 truncate">
-                  <GroupIcon className="h-4 w-4 shrink-0" />
+                  <GroupIcon className="h-4 w-4 shrink-0" aria-hidden="true" />
                   <span className="truncate">{group.label}</span>
                 </span>
-                <ChevronDown className={cn("h-4 w-4 transition-transform", isOpen && "rotate-180")} />
+                <ChevronDown aria-hidden="true" className={cn("h-4 w-4 transition-transform", isOpen && "rotate-180")} />
               </Button>
               {isOpen ? (
-                <div className="mt-0.5 space-y-0.5 border-l border-border/60 pl-3 ml-4">
+                <ul
+                  id={`finance-group-panel-${group.id}`}
+                  aria-labelledby={`finance-group-${group.id}`}
+                  className="mt-0.5 space-y-0.5 border-l border-border/60 pl-3 ml-4"
+                >
                   {group.items.map((item) => (
-                    <button
-                      key={item.id}
-                      type="button"
-                      onClick={() => onSelect(item.id)}
-                      className={cn(
-                        "block w-full rounded-md px-2.5 py-1.5 text-left text-[13px] transition-colors",
-                        activeView === item.id
-                          ? "bg-primary/15 font-medium text-primary"
-                          : "text-muted-foreground hover:bg-muted hover:text-foreground",
-                      )}
-                    >
-                      {item.label}
-                    </button>
+                    <li key={item.id}>
+                      <button
+                        type="button"
+                        onClick={() => onSelect(item.id)}
+                        aria-current={activeView === item.id ? "page" : undefined}
+                        className={cn(
+                          "block w-full rounded-md px-2.5 py-1.5 text-left text-[13px] transition-colors",
+                          activeView === item.id
+                            ? "bg-primary/15 font-medium text-primary"
+                            : "text-muted-foreground hover:bg-muted hover:text-foreground",
+                        )}
+                      >
+                        {item.label}
+                      </button>
+                    </li>
                   ))}
-                </div>
+                </ul>
               ) : null}
+
             </div>
           );
         })}
