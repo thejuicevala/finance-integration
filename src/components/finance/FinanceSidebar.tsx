@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import {
   Activity,
   AlertTriangle,
@@ -239,7 +239,8 @@ export function FinanceSidebar({
 
   return (
     <ScrollArea className="h-full">
-      <nav className="space-y-1 p-3">
+      <nav className="space-y-1 p-3" aria-label="Finance modules">
+
         <div className="mb-4 flex items-center gap-3 px-2">
           <span className="flex h-9 w-9 items-center justify-center rounded-xl bg-primary/15 text-primary">
             <ArrowUpCircle className="h-5 w-5" />
