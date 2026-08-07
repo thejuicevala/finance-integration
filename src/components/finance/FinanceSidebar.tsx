@@ -227,8 +227,15 @@ export function FinanceSidebar({
   const activeGroup = FINANCE_GROUPS.find((g) => g.items.some((i) => i.id === activeView))?.id;
   const [open, setOpen] = useState<string[]>(activeGroup ? [activeGroup] : ["overview"]);
 
+  // Keep the group containing the active view expanded, even when the view
+  // changes programmatically (e.g. from the header search).
+  useEffect(() => {
+    if (activeGroup) setOpen((prev) => (prev.includes(activeGroup) ? prev : [...prev, activeGroup]));
+  }, [activeGroup]);
+
   const toggle = (id: string) =>
     setOpen((prev) => (prev.includes(id) ? prev.filter((g) => g !== id) : [...prev, id]));
+
 
   return (
     <ScrollArea className="h-full">
