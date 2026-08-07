@@ -1,4 +1,4 @@
-import { useMemo, useState } from "react";
+import { useEffect, useMemo, useRef, useState } from "react";
 import { Bell, Menu, RefreshCcw, Search } from "lucide-react";
 import { useQueryClient } from "@tanstack/react-query";
 
@@ -25,7 +25,10 @@ import AlertSections from "./sections/AlertSections";
 import LogSections from "./sections/LogSections";
 import ConsoleSections from "./sections/ConsoleSections";
 
-const GROUP_COMPONENTS: Record<string, (props: { view: FinanceView }) => React.ReactElement> = {
+type FinanceGroupId = (typeof FINANCE_GROUPS)[number]["id"];
+
+/** Single source of truth: every group declared in FINANCE_GROUPS must have a renderer. */
+const GROUP_COMPONENTS: Record<FinanceGroupId, (props: { view: FinanceView }) => React.ReactElement> = {
   overview: OverviewSections,
   wallet: WalletSections,
   payments: PaymentSections,
@@ -42,6 +45,111 @@ const GROUP_COMPONENTS: Record<string, (props: { view: FinanceView }) => React.R
   logs: LogSections,
   consoles: ConsoleSections,
 };
+
+const MAX_RESULTS = 8;
+
+function FinanceSearch({
+  onSelect,
+  autoFocus,
+  id,
+}: {
+  onSelect: (view: FinanceView) => void;
+  autoFocus?: boolean;
+  id: string;
+}) {
+  const [search, setSearch] = useState("");
+  const [highlight, setHighlight] = useState(0);
+  const listId = `${id}-results`;
+
+  const matches = useMemo(() => {
+    const q = search.trim().toLowerCase();
+    if (!q) return [];
+    return FINANCE_GROUPS.flatMap((g) =>
+      g.items
+        .filter((i) => i.label.toLowerCase().includes(q) || g.label.toLowerCase().includes(q))
+        .map((i) => ({ ...i, group: g.label })),
+    );
+  }, [search]);
+
+  const results = matches.slice(0, MAX_RESULTS);
+  const hidden = matches.length - results.length;
+
+  useEffect(() => setHighlight(0), [search]);
+
+  const choose = (view: FinanceView) => {
+    setSearch("");
+    onSelect(view);
+  };
+
+  return (
+    <div className="relative">
+      <Search className="pointer-events-none absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground" aria-hidden="true" />
+      <Input
+        id={id}
+        value={search}
+        autoFocus={autoFocus}
+        onChange={(e) => setSearch(e.target.value)}
+        onKeyDown={(e) => {
+          if (!results.length) return;
+          if (e.key === "ArrowDown") {
+            e.preventDefault();
+            setHighlight((h) => (h + 1) % results.length);
+          } else if (e.key === "ArrowUp") {
+            e.preventDefault();
+            setHighlight((h) => (h - 1 + results.length) % results.length);
+          } else if (e.key === "Enter") {
+            e.preventDefault();
+            const target = results[highlight];
+            if (target) choose(target.id);
+          } else if (e.key === "Escape") {
+            setSearch("");
+          }
+        }}
+        placeholder="Search finance modules"
+        aria-label="Search finance modules"
+        role="combobox"
+        aria-expanded={results.length > 0}
+        aria-controls={listId}
+        aria-autocomplete="list"
+        aria-activedescendant={results.length ? `${listId}-${highlight}` : undefined}
+        className="w-full pl-9 md:w-64"
+      />
+      <p className="sr-only" aria-live="polite">
+        {search.trim() ? `${matches.length} matching finance modules` : ""}
+      </p>
+      {results.length > 0 ? (
+        <div
+          id={listId}
+          role="listbox"
+          aria-label="Finance module search results"
+          className="absolute right-0 top-full z-30 mt-2 w-full overflow-hidden rounded-lg border border-border bg-popover shadow-lg md:w-80"
+        >
+          {results.map((r, index) => (
+            <button
+              key={r.id}
+              id={`${listId}-${index}`}
+              role="option"
+              aria-selected={index === highlight}
+              type="button"
+              onMouseEnter={() => setHighlight(index)}
+              onClick={() => choose(r.id)}
+              className={`block w-full px-3 py-2 text-left text-sm hover:bg-muted ${index === highlight ? "bg-muted" : ""}`}
+            >
+              <span className="text-foreground">{r.label}</span>
+              <span className="ml-2 text-xs text-muted-foreground">{r.group}</span>
+            </button>
+          ))}
+          {hidden > 0 ? (
+            <p className="border-t border-border px-3 py-2 text-xs text-muted-foreground">
+              {hidden} more match{hidden === 1 ? "" : "es"} — refine your search
+            </p>
+          ) : null}
+        </div>
+      ) : null}
+    </div>
+  );
+}
+
 
 export function FinanceManager() {
   const [view, setView] = useState<FinanceView>("overview_total_balance");
