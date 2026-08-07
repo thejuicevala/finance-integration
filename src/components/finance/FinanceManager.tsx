@@ -153,10 +153,11 @@ function FinanceSearch({
 
 export function FinanceManager() {
   const [view, setView] = useState<FinanceView>("overview_total_balance");
-  const [search, setSearch] = useState("");
   const [mobileOpen, setMobileOpen] = useState(false);
+  const [mobileSearchOpen, setMobileSearchOpen] = useState(false);
   const [notificationsOpen, setNotificationsOpen] = useState(false);
   const queryClient = useQueryClient();
+  const mainRef = useRef<HTMLElement>(null);
 
   const groupId = useMemo(
     () => FINANCE_GROUPS.find((g) => g.items.some((i) => i.id === view))?.id ?? "overview",
@@ -165,25 +166,18 @@ export function FinanceManager() {
   const Section = GROUP_COMPONENTS[groupId] ?? OverviewSections;
   const meta = VIEW_LABELS[view];
 
-  const results = useMemo(() => {
-    const q = search.trim().toLowerCase();
-    if (!q) return [];
-    return FINANCE_GROUPS.flatMap((g) =>
-      g.items
-        .filter((i) => i.label.toLowerCase().includes(q) || g.label.toLowerCase().includes(q))
-        .map((i) => ({ ...i, group: g.label })),
-    ).slice(0, 8);
-  }, [search]);
-
   const select = (next: FinanceView) => {
     setView(next);
-    setSearch("");
     setMobileOpen(false);
+    setMobileSearchOpen(false);
   };
 
   return (
-    <div className="flex min-h-screen bg-background">
-      <aside className="sticky top-0 hidden h-screen w-72 shrink-0 border-r border-border/60 bg-sidebar lg:block">
+    <div className="flex min-h-dvh bg-background">
+      <aside
+        aria-label="Finance sidebar"
+        className="sticky top-0 hidden h-dvh w-72 shrink-0 border-r border-border/60 bg-sidebar lg:block"
+      >
         <FinanceSidebar activeView={view} onSelect={select} />
       </aside>
 
@@ -191,8 +185,8 @@ export function FinanceManager() {
         <header className="sticky top-0 z-20 flex items-center gap-3 border-b border-border/60 bg-background/85 px-4 py-3 backdrop-blur lg:px-8">
           <Sheet open={mobileOpen} onOpenChange={setMobileOpen}>
             <SheetTrigger asChild>
-              <Button variant="ghost" size="icon" className="lg:hidden" aria-label="Open finance menu">
-                <Menu className="h-5 w-5" />
+              <Button variant="ghost" size="icon" className="min-h-11 min-w-11 lg:hidden" aria-label="Open finance menu">
+                <Menu className="h-5 w-5" aria-hidden="true" />
               </Button>
             </SheetTrigger>
             <SheetContent side="left" className="w-72 p-0">
@@ -206,30 +200,23 @@ export function FinanceManager() {
             <p className="truncate font-display text-sm font-semibold text-foreground">{meta?.label}</p>
           </div>
 
-          <div className="relative hidden md:block">
-            <Search className="pointer-events-none absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground" />
-            <Input
-              value={search}
-              onChange={(e) => setSearch(e.target.value)}
-              placeholder="Search finance modules"
-              className="w-64 pl-9"
-            />
-            {results.length > 0 ? (
-              <div className="absolute right-0 top-full z-30 mt-2 w-80 overflow-hidden rounded-lg border border-border bg-popover shadow-lg">
-                {results.map((r) => (
-                  <button
-                    key={r.id}
-                    type="button"
-                    onClick={() => select(r.id)}
-                    className="block w-full px-3 py-2 text-left text-sm hover:bg-muted"
-                  >
-                    <span className="text-foreground">{r.label}</span>
-                    <span className="ml-2 text-xs text-muted-foreground">{r.group}</span>
-                  </button>
-                ))}
-              </div>
-            ) : null}
+          <div className="hidden md:block">
+            <FinanceSearch id="finance-search-desktop" onSelect={select} />
           </div>
+
+          <Sheet open={mobileSearchOpen} onOpenChange={setMobileSearchOpen}>
+            <SheetTrigger asChild>
+              <Button variant="ghost" size="icon" className="min-h-11 min-w-11 md:hidden" aria-label="Search finance modules">
+                <Search className="h-5 w-5" aria-hidden="true" />
+              </Button>
+            </SheetTrigger>
+            <SheetContent side="top" className="p-4">
+              <SheetTitle className="mb-3 text-sm">Search finance modules</SheetTitle>
+              <FinanceSearch id="finance-search-mobile" onSelect={select} autoFocus />
+            </SheetContent>
+          </Sheet>
+
+
 
           <Button
             variant="outline"
