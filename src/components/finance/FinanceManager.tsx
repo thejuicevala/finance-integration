@@ -215,25 +215,32 @@ export function FinanceManager() {
               <FinanceSearch id="finance-search-mobile" onSelect={select} autoFocus />
             </SheetContent>
           </Sheet>
-
-
-
           <Button
             variant="outline"
             size="sm"
             onClick={() => queryClient.invalidateQueries({ queryKey: ["finance"] })}
           >
-            <RefreshCcw className="mr-2 h-4 w-4" />
+            <RefreshCcw className="mr-2 h-4 w-4" aria-hidden="true" />
             Refresh
           </Button>
-          <Button variant="ghost" size="icon" aria-label="Open finance notifications" onClick={() => setNotificationsOpen(true)}>
-            <Bell className="h-4 w-4" />
+          <Button
+            variant="ghost"
+            size="icon"
+            className="min-h-11 min-w-11"
+            aria-label="Open finance notifications"
+            onClick={() => setNotificationsOpen(true)}
+          >
+            <Bell className="h-4 w-4" aria-hidden="true" />
           </Button>
         </header>
 
-        <main className="flex-1 px-4 py-6 lg:px-8">
+        <main ref={mainRef} tabIndex={-1} aria-labelledby="finance-view-title" className="flex-1 px-4 py-6 lg:px-8">
+          <h1 id="finance-view-title" className="sr-only">
+            {meta?.label ?? "Finance"} — {meta?.group ?? "Finance Manager"}
+          </h1>
           <Section view={view} />
         </main>
+
         <FinanceNotifications open={notificationsOpen} onOpenChange={setNotificationsOpen} />
       </div>
     </div>
